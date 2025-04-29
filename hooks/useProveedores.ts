@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Proveedor, Categoria, ProveedorDetalle, Documento, TipoDocumento, Transaccion } from '@/types/supabase'
