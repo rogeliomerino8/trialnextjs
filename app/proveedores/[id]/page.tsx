@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Check, X, FileText, Upload, ArrowLeft, Eye } from "lucide-react"
 import Breadcrumb from "@/components/breadcrumb"
 import { useRouter } from "next/navigation"
+import { use } from "react"
 
 type Documento = {
   id: string
@@ -36,13 +37,18 @@ type ProveedorDetalle = {
   }[]
 }
 
-const ProveedorDetailPage = ({ params }: { params: { id: string } }) => {
+// En Next.js 15, params es una Promise
+const ProveedorDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("general")
+  
+  // Utilizamos use() para resolver la Promise de params
+  const resolvedParams = use(params)
+  const proveedorId = resolvedParams.id
 
   // Datos de ejemplo
   const proveedor: ProveedorDetalle = {
-    id: params.id,
+    id: proveedorId,
     nombre: "Empresa Ejemplo S.A.",
     estatus: "apto",
     razonSocial: "Empresa Ejemplo Sociedad Anónima",
@@ -103,7 +109,7 @@ const ProveedorDetailPage = ({ params }: { params: { id: string } }) => {
   const breadcrumbItems = [
     { label: "Inicio", href: "/" },
     { label: "Proveedores", href: "/proveedores" },
-    { label: proveedor.nombre, href: `/proveedores/${proveedor.id}` },
+    { label: proveedor.nombre, href: `/proveedores/${proveedorId}` },
   ]
 
   return (
