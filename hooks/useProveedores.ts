@@ -74,7 +74,13 @@ export const useProveedores = (options: UseProveedoresOptions = {}) => {
 
       if (countError) throw countError
 
-      setProveedores(proveedoresData || [])
+      // Convertir los datos de proveedores a un formato compatible con el tipo Proveedor
+      const formattedProveedoresData = proveedoresData?.map(data => ({
+        ...data,
+        updated_at: data.created_at // Asumiendo que el campo updated_at no está disponible, se utiliza created_at como un placeholder
+      })) || [];
+
+      setProveedores(formattedProveedoresData)
       setCount(totalCount || 0)
     } catch (err) {
       console.error('Error al cargar proveedores:', err)
@@ -151,19 +157,29 @@ export const useProveedores = (options: UseProveedoresOptions = {}) => {
           { nombre: 'Construcción', descripcion: 'Materiales y servicios de construcción' }
         ];
         
-        const { error: directError } = await supabase
-          .from('categorias')
-          .insert(defaultCategorias);
-          
-        if (directError) {
-          console.error('Error también al insertar directamente:', directError);
-          console.log('IMPORTANTE: Debes permitir inserciones en la tabla categorias o crear la función RPC mencionada');
+        try {
+          const { error: directError } = await supabase
+            .from('categorias')
+            .insert(defaultCategorias);
+            
+          if (directError) {
+            const errorMessage = directError.message || 'Error sin detalle';
+            const errorDetails = directError.details || 'Sin detalles adicionales';
+            console.error(`Error también al insertar directamente: ${errorMessage}`, directError);
+            console.log(`Detalles del error: ${errorDetails}`);
+            console.log('IMPORTANTE: Debes permitir inserciones en la tabla categorias o crear la función RPC mencionada');
+          }
+        } catch (directInsertError) {
+          console.error('Excepción al intentar insertar directamente:', directInsertError);
+          console.log('IMPORTANTE: Verifica las políticas RLS de la tabla categorias');
+          console.log('Revisa la documentación en docs/supabase-setup.md para solucionar este problema');
         }
       } else {
         console.log("Categorías por defecto insertadas correctamente mediante RPC:", data)
       }
     } catch (err) {
       console.error('Error al insertar categorías por defecto:', err)
+      console.log('Revisa la documentación en docs/supabase-setup.md para solucionar este problema');
     }
   }
 
@@ -272,11 +288,10 @@ export const useProveedores = (options: UseProveedoresOptions = {}) => {
         _email: proveedorData.email,
         _telefono: proveedorData.telefono || '',
         _pais: proveedorData.pais,
-        _categoria_id: proveedorData.categoria_id || null
+        _categoria_id: proveedorData.categoria_id || undefined
       })
 
       if (error) throw error
-      
       // Actualizar la lista de proveedores después de registrar uno nuevo
       await fetchProveedores()
       
@@ -302,7 +317,7 @@ export const useProveedores = (options: UseProveedoresOptions = {}) => {
         _tipo_documento_id: documentoData.tipoDocumentoId,
         _nombre: documentoData.nombre,
         _url_archivo: documentoData.urlArchivo,
-        _fecha_vencimiento: documentoData.fechaVencimiento || null,
+        _fecha_vencimiento: documentoData.fechaVencimiento || undefined,
         _estatus: documentoData.estatus
       })
 

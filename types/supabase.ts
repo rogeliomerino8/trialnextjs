@@ -297,58 +297,66 @@ export type Database = {
       }
       get_proveedores: {
         Args: {
-          _limit?: number
-          _offset?: number
-          _estatus?: string
-          _categoria_id?: string
+          _limit: number;
+          _offset: number;
+          _estatus: string | null;
+          _categoria_id: string | null;
         }
+        Returns: {
+          id: string;
+          nombre: string;
+          razon_social: string;
+          rfc: string;
+          estatus: string;
+          email: string;
+          telefono: string;
+          pais: string;
+          created_at: string;
+          categoria_id: string;
+          categoria_nombre: string;
+          documentos_count: number;
+          documentos_aptos: number;
+          documentos_no_aptos: number;
+        }[]
+      }
+      insertar_categorias_por_defecto: {
+        Args: Record<PropertyKey, never>
         Returns: {
           id: string
           nombre: string
-          razon_social: string
-          rfc: string
-          estatus: string
-          email: string
-          telefono: string
-          pais: string
-          created_at: string
-          categoria_id: string
-          categoria_nombre: string
-          documentos_count: number
-          documentos_aptos: number
-          documentos_no_aptos: number
+          descripcion: string | null
         }[]
       }
       registrar_documento: {
         Args: {
-          _proveedor_id: string
-          _tipo_documento_id: string
-          _nombre: string
-          _url_archivo: string
-          _fecha_vencimiento: string
-          _estatus: string
+          _proveedor_id: string;
+          _tipo_documento_id: string;
+          _nombre: string;
+          _url_archivo: string;
+          _fecha_vencimiento?: string;
+          _estatus: string;
         }
         Returns: string
       }
       registrar_proveedor: {
         Args: {
-          _nombre: string
-          _razon_social: string
-          _rfc: string
-          _estatus: string
-          _email: string
-          _telefono: string
-          _pais: string
-          _categoria_id: string
+          _nombre: string;
+          _razon_social: string;
+          _rfc: string;
+          _estatus: string;
+          _email: string;
+          _telefono?: string;
+          _pais: string;
+          _categoria_id?: string;
         }
         Returns: string
       }
       registrar_transaccion: {
         Args: {
-          _proveedor_id: string
-          _descripcion: string
-          _monto: number
-          _fecha: string
+          _proveedor_id: string;
+          _descripcion: string;
+          _monto: number;
+          _fecha: string;
         }
         Returns: string
       }
