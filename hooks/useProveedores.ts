@@ -86,17 +86,84 @@ export const useProveedores = (options: UseProveedoresOptions = {}) => {
 
   const fetchCategorias = async () => {
     try {
+      console.log("-------------- DEPURACIÓN CATEGORÍAS --------------")
+      console.log("Iniciando fetchCategorias")
+      
+      // Comprobar que la conexión a supabase esté funcionando
+      console.log("Conexión a Supabase:", supabase !== null ? "OK" : "ERROR")
+      
       const { data, error: categoriasError } = await supabase
         .from('categorias')
         .select('*')
         .order('nombre')
 
-      if (categoriasError) throw categoriasError
+      console.log("Respuesta de Supabase:", { data, error: categoriasError })
+      
+      if (categoriasError) {
+        console.error('Error específico al cargar categorías:', categoriasError)
+        throw categoriasError
+      }
 
+      console.log("Categorías obtenidas:", data)
+      console.log("Número de categorías:", data ? data.length : 0)
+      
+      if (data && data.length > 0) {
+        console.log("Primera categoría:", data[0])
+      } else {
+        console.log("No hay categorías en la respuesta, intentando insertar por defecto...")
+      }
+
+      // Si no hay categorías, insertar algunas por defecto
+      if (!data || data.length === 0) {
+        console.log("No hay categorías, insertando categorías por defecto...")
+        await insertDefaultCategorias()
+        return fetchCategorias() // Volver a intentar cargar las categorías
+      }
+
+      console.log("Estableciendo categorías en el estado:", data)
       setCategorias(data || [])
+      console.log("Estado actualizado con categorías")
+      console.log("-------------- FIN DEPURACIÓN CATEGORÍAS --------------")
     } catch (err) {
       console.error('Error al cargar categorías:', err)
       setError('Error al cargar las categorías')
+    }
+  }
+
+  // Función para insertar categorías por defecto
+  const insertDefaultCategorias = async () => {
+    try {
+      console.log("Intentando insertar categorías por defecto mediante función RPC...")
+      
+      // En lugar de intentar insertar directamente, vamos a comprobar
+      // si existe una función RPC para insertar categorías
+      const { data, error } = await supabase.rpc('insertar_categorias_por_defecto');
+
+      if (error) {
+        console.error('Error al insertar categorías por defecto usando RPC:', error);
+        console.log('Alternativa: necesitas crear una función RPC en Supabase llamada insertar_categorias_por_defecto');
+        
+        // Intento directo que probablemente fallará debido a las políticas RLS
+        const defaultCategorias = [
+          { nombre: 'Tecnología', descripcion: 'Proveedores de servicios tecnológicos y hardware' },
+          { nombre: 'Alimentos', descripcion: 'Proveedores de alimentos y bebidas' },
+          { nombre: 'Servicios', descripcion: 'Proveedores de servicios generales' },
+          { nombre: 'Construcción', descripcion: 'Materiales y servicios de construcción' }
+        ];
+        
+        const { error: directError } = await supabase
+          .from('categorias')
+          .insert(defaultCategorias);
+          
+        if (directError) {
+          console.error('Error también al insertar directamente:', directError);
+          console.log('IMPORTANTE: Debes permitir inserciones en la tabla categorias o crear la función RPC mencionada');
+        }
+      } else {
+        console.log("Categorías por defecto insertadas correctamente mediante RPC:", data)
+      }
+    } catch (err) {
+      console.error('Error al insertar categorías por defecto:', err)
     }
   }
 
@@ -275,6 +342,7 @@ export const useProveedores = (options: UseProveedoresOptions = {}) => {
 
   // Cargar proveedores y categorías al iniciar
   useEffect(() => {
+    console.log("useEffect en useProveedores ejecutado")
     fetchProveedores()
     fetchCategorias()
   }, [limit, offset, estatus, categoriaId])

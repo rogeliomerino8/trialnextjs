@@ -17,9 +17,9 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useChatContext } from "@/components/chat-provider"
 import { useProveedores } from "@/hooks/useProveedores"
-import { Proveedor, Categoria } from "@/types/supabase"
+import { Proveedor } from "@/types/supabase"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -31,18 +31,15 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 const ProveedoresPage = () => {
   const router = useRouter()
   const { isChatOpen } = useChatContext()
   const { proveedores, categorias, loading, error, registrarProveedor } = useProveedores()
+  
+  // Imprimir para depuración
+  console.log("Estado actual - categorias:", categorias, "loading:", loading, "error:", error)
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
     nombre: "",
@@ -50,9 +47,7 @@ const ProveedoresPage = () => {
     rfc: "",
     email: "",
     telefono: "",
-    pais: "México",
-    estatus: "apto",
-    categoria_id: ""
+    pais: "México"
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -62,18 +57,20 @@ const ProveedoresPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
   
-  // Función para manejar cambios en los selectores
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-  
   // Función para enviar el formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     
     try {
-      const proveedorId = await registrarProveedor(formData)
+      // Añadir el estatus por defecto antes de enviar
+      const proveedorData = {
+        ...formData,
+        estatus: "apto", // Establecer valor por defecto
+        categoria_id: null // Establecer valor por defecto como null
+      }
+      
+      const proveedorId = await registrarProveedor(proveedorData)
       
       if (proveedorId) {
         // Reiniciar el formulario
@@ -83,9 +80,7 @@ const ProveedoresPage = () => {
           rfc: "",
           email: "",
           telefono: "",
-          pais: "México",
-          estatus: "apto",
-          categoria_id: ""
+          pais: "México"
         })
         
         // Cerrar el diálogo
@@ -231,6 +226,22 @@ const ProveedoresPage = () => {
 
   const containerClass = `container mx-auto py-10 data-table-container px-4 ${isChatOpen ? 'chat-active' : ''}`
 
+  // Añadir más detalles de depuración
+  useEffect(() => {
+    console.log("Categorías cargadas en proveedores page:", categorias)
+    console.log("¿Cuántas categorías?", categorias?.length || 0)
+    
+    // Si no hay categorías, mostrar un mensaje de advertencia
+    if (!categorias || categorias.length === 0) {
+      console.warn("No hay categorías disponibles. Asegúrate de que:");
+      console.warn("1. La tabla 'categorias' existe en la base de datos");
+      console.warn("2. Las políticas de seguridad permiten leer la tabla");
+      console.warn("3. Has ejecutado el script sql/create_insert_categories_function.sql");
+    } else {
+      console.log("Primera categoría:", categorias[0])
+    }
+  }, [categorias])
+
   if (loading) {
     return (
       <div className={containerClass}>
@@ -292,7 +303,7 @@ const ProveedoresPage = () => {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#FF5722] hover:bg-[#E64A19]">
+            <Button className="bg-orange-400 hover:bg-orange-500">
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Proveedor
             </Button>
@@ -384,43 +395,6 @@ const ProveedoresPage = () => {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="estatus">Estatus</Label>
-                    <Select 
-                      name="estatus" 
-                      value={formData.estatus} 
-                      onValueChange={(value) => handleSelectChange('estatus', value)}
-                    >
-                      <SelectTrigger className="bg-[#1C1C1F] border-[#2A2A2E]">
-                        <SelectValue placeholder="Seleccionar estatus" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#222226] border-[#2A2A2E]">
-                        <SelectItem value="apto">Apto</SelectItem>
-                        <SelectItem value="no_apto">No apto</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="categoria_id">Categoría</Label>
-                    <Select 
-                      name="categoria_id" 
-                      value={formData.categoria_id} 
-                      onValueChange={(value) => handleSelectChange('categoria_id', value)}
-                    >
-                      <SelectTrigger className="bg-[#1C1C1F] border-[#2A2A2E]">
-                        <SelectValue placeholder="Seleccionar categoría" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#222226] border-[#2A2A2E]">
-                        {categorias.map((categoria: Categoria) => (
-                          <SelectItem key={categoria.id} value={categoria.id}>
-                            {categoria.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
               </div>
               <DialogFooter>
                 <Button 
@@ -433,7 +407,7 @@ const ProveedoresPage = () => {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="bg-[#FF5722] hover:bg-[#E64A19]"
+                  className="bg-orange-400 hover:bg-orange-500"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Guardando...' : 'Guardar'}

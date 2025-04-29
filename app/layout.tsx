@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import MainNav from "@/components/main-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { ChatProvider } from "@/components/chat-provider";
 import { SupabaseProvider } from "@/components/providers/supabase-provider";
 import ChatButton from "@/components/chat-button";
@@ -37,7 +36,6 @@ export default function RootLayout({
                     <MainNav />
                     <div className="flex flex-1 items-center justify-end space-x-2">
                       <ChatButton />
-                      <ThemeToggle />
                     </div>
                   </div>
                 </header>

@@ -4,18 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Home, Users } from "lucide-react"
+import { Users } from "lucide-react"
 
 const MainNav = () => {
   const pathname = usePathname()
 
   const routes = [
-    {
-      href: "/",
-      label: "Inicio",
-      icon: Home,
-      active: pathname === "/",
-    },
     {
       href: "/proveedores",
       label: "Proveedores",
